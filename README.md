@@ -14,7 +14,37 @@ Desenvolver um banco de dados relacional para gerenciar as operações de uma lo
 - Gerentes de frota
 - Clientes que alugam veículos
 
----
+### 📌 Observações Importantes
+🔒 Senhas
+As senhas nos scripts são apenas para exemplo (admin123, atendente123, gerente123)
+
+Em ambiente de produção, utilize hash de senhas (bcrypt, etc.)
+
+### 🔄 Reexecução
+Todos os scripts podem ser executados múltiplas vezes sem erro
+
+Utilizam CREATE TABLE IF NOT EXISTS e INSERT com verificação de existência
+
+### 📊 Views Abreviadas
+Foram criadas views com nomes abreviados para facilitar consultas:
+
+-vw_at → atendente
+
+-vw_m → motorista
+
+-vw_c → clientes
+
+-vw_cv → categoria_veiculo
+
+-vw_sv → status_veiculo
+
+-vw_v → veiculo
+
+-vw_a → aluguel
+
+-vw_man → manutencao
+
+-vw_mul → multa
 
 ## 📊 Modelo de Dados Relacional
 
