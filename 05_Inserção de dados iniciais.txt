@@ -1,0 +1,214 @@
+-- Versão: 1.0
+-- Ação: insert
+-- Descrição: Inserção de dados iniciais - Versão final com CPF ajustado
+
+DO $$
+DECLARE
+    coluna RECORD;
+    colunas_encontradas TEXT := '';
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'DIAGNÓSTICO DA TABELA ATENDENTE:';
+    RAISE NOTICE '==========================================';
+    
+    -- Listar todas as colunas da tabela atendente
+    FOR coluna IN 
+        SELECT column_name, data_type, character_maximum_length
+        FROM information_schema.columns 
+        WHERE table_name = 'atendente'
+        ORDER BY ordinal_position
+    LOOP
+        colunas_encontradas := colunas_encontradas || coluna.column_name || ' (' || coluna.data_type || ') | ';
+        RAISE NOTICE 'Coluna: % (Tipo: %, TamMax: %)', 
+            coluna.column_name, 
+            coluna.data_type, 
+            coluna.character_maximum_length;
+    END LOOP;
+    
+    IF colunas_encontradas = '' THEN
+        RAISE NOTICE 'NENHUMA COLUNA ENCONTRADA NA TABELA ATENDENTE!';
+        RAISE NOTICE 'Verificando se a tabela realmente existe...';
+        
+        IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'atendente') THEN
+            RAISE NOTICE 'A tabela atendente existe mas não tem colunas? Isso é estranho.';
+        ELSE
+            RAISE NOTICE 'A tabela atendente NÃO EXISTE!';
+        END IF;
+    ELSE
+        RAISE NOTICE '------------------------------------------';
+        RAISE NOTICE 'Resumo: %', colunas_encontradas;
+    END IF;
+    
+    RAISE NOTICE '==========================================';
+END $$;
+
+-- =====================================================
+-- INSERÇÃO NA TABELA ATENDENTE (com CPF sem formatação)
+-- =====================================================
+
+DO $$
+DECLARE
+    coluna_existe BOOLEAN;
+BEGIN
+    -- Verificar se a tabela atendente existe
+    IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'atendente') THEN
+        RAISE NOTICE 'Tabela atendente não existe. Criando...';
+        
+        CREATE TABLE atendente (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(200) NOT NULL,
+            cpf VARCHAR(14) UNIQUE,
+            email VARCHAR(200) UNIQUE,
+            senha VARCHAR(255),
+            nivel_acesso VARCHAR(50) DEFAULT 'atendente',
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        RAISE NOTICE 'Tabela atendente criada com sucesso!';
+    END IF;
+    
+    -- Verificar colunas existentes
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'atendente' AND column_name = 'nome'
+    ) INTO coluna_existe;
+    
+    IF NOT coluna_existe THEN
+        RAISE NOTICE 'Tabela atendente existe mas não tem coluna "nome". Adicionando colunas padrão...';
+        
+        -- Adicionar colunas se não existirem
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS nome VARCHAR(200);
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS cpf VARCHAR(14) UNIQUE;
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS email VARCHAR(200) UNIQUE;
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS senha VARCHAR(255);
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS nivel_acesso VARCHAR(50) DEFAULT 'atendente';
+        ALTER TABLE atendente ADD COLUMN IF NOT EXISTS criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+    
+    -- =====================================================
+    -- INSERIR DADOS (COM CPF SEM PONTUAÇÃO)
+    -- =====================================================
+    
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'INSERINDO ATENDENTES...';
+    RAISE NOTICE '==========================================';
+    
+    -- Admin Master (CPF sem pontuação - 11 dígitos)
+    INSERT INTO atendente (nome, cpf, email, senha, nivel_acesso)
+    SELECT 'Admin Master', '11111111111', 'admin@locadora.com', 'admin123', 'admin'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM atendente WHERE email = 'admin@locadora.com' OR cpf = '11111111111'
+    );
+    
+    IF FOUND THEN
+        RAISE NOTICE '✓ Admin Master inserido com sucesso';
+    ELSE
+        RAISE NOTICE '✗ Admin Master já existia ou não pôde ser inserido';
+    END IF;
+    
+    -- João Atendente (CPF sem pontuação)
+    INSERT INTO atendente (nome, cpf, email, senha, nivel_acesso)
+    SELECT 'João Atendente', '22222222222', 'joao@locadora.com', 'atendente123', 'atendente'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM atendente WHERE email = 'joao@locadora.com' OR cpf = '22222222222'
+    );
+    
+    IF FOUND THEN
+        RAISE NOTICE '✓ João Atendente inserido com sucesso';
+    ELSE
+        RAISE NOTICE '✗ João Atendente já existia ou não pôde ser inserido';
+    END IF;
+    
+    -- Maria Gerente (CPF sem pontuação)
+    INSERT INTO atendente (nome, cpf, email, senha, nivel_acesso)
+    SELECT 'Maria Gerente', '33333333333', 'maria@locadora.com', 'gerente123', 'gerente'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM atendente WHERE email = 'maria@locadora.com' OR cpf = '33333333333'
+    );
+    
+    IF FOUND THEN
+        RAISE NOTICE '✓ Maria Gerente inserida com sucesso';
+    ELSE
+        RAISE NOTICE '✗ Maria Gerente já existia ou não pôde ser inserida';
+    END IF;
+    
+    RAISE NOTICE '==========================================';
+END $$;
+
+-- =====================================================
+-- INSERIR DADOS NAS OUTRAS TABELAS (com CPF ajustado)
+-- =====================================================
+
+-- Inserir motoristas (com CPF sem pontuação)
+DO $$
+BEGIN
+    RAISE NOTICE 'INSERINDO MOTORISTAS...';
+    
+    INSERT INTO motorista (nome, cpf, data_nascimento, cnh, validade_cnh, telefone, email, endereco, status)
+    SELECT 'Carlos Silva', '12345678901', '1985-03-15', '12345678901', '2025-03-15', '(11) 98765-4321', 'carlos.silva@email.com', 'Rua A, 123 - SP', 'ativo'
+    WHERE NOT EXISTS (SELECT 1 FROM motorista WHERE cpf = '12345678901' OR email = 'carlos.silva@email.com');
+    
+    INSERT INTO motorista (nome, cpf, data_nascimento, cnh, validade_cnh, telefone, email, endereco, status)
+    SELECT 'Ana Oliveira', '98765432101', '1990-07-22', '98765432101', '2024-07-22', '(11) 91234-5678', 'ana.oliveira@email.com', 'Av B, 456 - SP', 'ativo'
+    WHERE NOT EXISTS (SELECT 1 FROM motorista WHERE cpf = '98765432101' OR email = 'ana.oliveira@email.com');
+    
+    INSERT INTO motorista (nome, cpf, data_nascimento, cnh, validade_cnh, telefone, email, endereco, status)
+    SELECT 'Pedro Santos', '45678912301', '1982-11-30', '45678912301', '2023-11-30', '(11) 99876-5432', 'pedro.santos@email.com', 'Rua C, 789 - SP', 'inativo'
+    WHERE NOT EXISTS (SELECT 1 FROM motorista WHERE cpf = '45678912301' OR email = 'pedro.santos@email.com');
+    
+    RAISE NOTICE 'Motoristas inseridos/verificados com sucesso';
+END $$;
+
+-- Inserir clientes (com CPF/CNPJ sem pontuação)
+DO $$
+BEGIN
+    RAISE NOTICE 'INSERINDO CLIENTES...';
+    
+    -- CNPJ sem pontuação (14 dígitos)
+    INSERT INTO clientes (nome, cpf, email)
+    SELECT 'Empresa XYZ Ltda', '55555555000155', 'contato@xyz.com'
+    WHERE NOT EXISTS (SELECT 1 FROM clientes WHERE cpf = '55555555000155' OR email = 'contato@xyz.com');
+    
+    -- CPF sem pontuação
+    INSERT INTO clientes (nome, cpf, email)
+    SELECT 'João Consumidor', '77788899900', 'joao.cliente@email.com'
+    WHERE NOT EXISTS (SELECT 1 FROM clientes WHERE cpf = '77788899900' OR email = 'joao.cliente@email.com');
+    
+    INSERT INTO clientes (nome, cpf, email)
+    SELECT 'Maria Consumidora', '44455566677', 'maria.cliente@email.com'
+    WHERE NOT EXISTS (SELECT 1 FROM clientes WHERE cpf = '44455566677' OR email = 'maria.cliente@email.com');
+    
+    RAISE NOTICE 'Clientes inseridos/verificados com sucesso';
+END $$;
+
+-- =====================================================
+-- RESUMO FINAL
+-- =====================================================
+
+DO $$
+DECLARE
+    total_atendentes INTEGER;
+    total_motoristas INTEGER;
+    total_clientes INTEGER;
+    r RECORD;
+BEGIN
+    SELECT COUNT(*) INTO total_atendentes FROM atendente;
+    SELECT COUNT(*) INTO total_motoristas FROM motorista;
+    SELECT COUNT(*) INTO total_clientes FROM clientes;
+    
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'RESUMO FINAL - DADOS INSERIDOS';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Atendentes: % registros', total_atendentes;
+    RAISE NOTICE 'Motoristas: % registros', total_motoristas;
+    RAISE NOTICE 'Clientes: % registros', total_clientes;
+    RAISE NOTICE '==========================================';
+    
+    IF total_atendentes > 0 THEN
+        RAISE NOTICE 'ATENDENTES CADASTRADOS:';
+        FOR r IN SELECT id, nome, email, nivel_acesso FROM atendente LOOP
+            RAISE NOTICE '  - % (ID: %) - % - Nível: %', r.nome, r.id, r.email, r.nivel_acesso;
+        END LOOP;
+        RAISE NOTICE '==========================================';
+    END IF;
+END $$;

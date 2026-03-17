@@ -1,0 +1,30 @@
+
+-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação das tabelas base do sistema
+
+-- Tabela de categorias de veículos
+CREATE TABLE IF NOT EXISTS categoria_veiculo (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de status de veículos
+CREATE TABLE IF NOT EXISTS status_veiculo (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL UNIQUE,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de atendentes
+CREATE TABLE IF NOT EXISTS atendentes (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    email VARCHAR(200) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    nivel_acesso VARCHAR(50) DEFAULT 'atendente',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

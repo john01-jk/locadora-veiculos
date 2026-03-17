@@ -1,0 +1,251 @@
+-- Versão: 1.0
+-- Ação: insert
+-- Descrição: Inserção de veículos, aluguéis, manutenções e multas (dados de exemplo)
+
+-- =====================================================
+-- INSERIR VEÍCULOS
+-- =====================================================
+
+-- Garantir categorias e status
+INSERT INTO categoria_veiculo (nome, descricao) VALUES 
+    ('Econômico', 'Veículos populares, menor custo'),
+    ('Intermediário', 'Veículos com melhor conforto'),
+    ('SUV', 'Utilitários esportivos'),
+    ('Luxo', 'Veículos de alto padrão'),
+    ('Pickup', 'Picapes para carga e trabalho')
+ON CONFLICT (nome) DO NOTHING;
+
+INSERT INTO status_veiculo (nome) VALUES 
+    ('Disponível'),
+    ('Alugado'),
+    ('Em manutenção'),
+    ('Indisponível'),
+    ('Reservado')
+ON CONFLICT (nome) DO NOTHING;
+
+-- Inserir veículos (com verificação por placa)
+DO $$
+DECLARE
+    cat_economico INTEGER;
+    cat_intermediario INTEGER;
+    cat_suv INTEGER;
+    cat_luxo INTEGER;
+    cat_pickup INTEGER;
+    status_disponivel INTEGER;
+    status_alugado INTEGER;
+    status_manutencao INTEGER;
+BEGIN
+    SELECT id INTO cat_economico FROM categoria_veiculo WHERE nome = 'Econômico';
+    SELECT id INTO cat_intermediario FROM categoria_veiculo WHERE nome = 'Intermediário';
+    SELECT id INTO cat_suv FROM categoria_veiculo WHERE nome = 'SUV';
+    SELECT id INTO cat_luxo FROM categoria_veiculo WHERE nome = 'Luxo';
+    SELECT id INTO cat_pickup FROM categoria_veiculo WHERE nome = 'Pickup';
+    
+    SELECT id INTO status_disponivel FROM status_veiculo WHERE nome = 'Disponível';
+    SELECT id INTO status_alugado FROM status_veiculo WHERE nome = 'Alugado';
+    SELECT id INTO status_manutencao FROM status_veiculo WHERE nome = 'Em manutenção';
+    
+    -- Econômicos
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Fiat Uno', 'ABC1A23', 2020, '9BD12345678901234', 'Branco', cat_economico, status_disponivel, 80.00, 45000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'ABC1A23');
+    
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'VW Gol', 'DEF2B34', 2021, '9BD23456789012345', 'Preto', cat_economico, status_disponivel, 90.00, 35000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'DEF2B34');
+    
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Chevrolet Onix', 'GHI3C45', 2022, '9BD34567890123456', 'Prata', cat_economico, status_alugado, 100.00, 15000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'GHI3C45');
+    
+    -- Intermediários
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Toyota Corolla', 'JKL4D56', 2021, '9BD45678901234567', 'Prata', cat_intermediario, status_disponivel, 180.00, 30000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'JKL4D56');
+    
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Honda Civic', 'MNO5E67', 2022, '9BD56789012345678', 'Preto', cat_intermediario, status_disponivel, 190.00, 20000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'MNO5E67');
+    
+    -- SUVs
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Jeep Compass', 'STU7G89', 2022, '9BD78901234567890', 'Branco', cat_suv, status_disponivel, 250.00, 25000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'STU7G89');
+    
+    -- Luxo
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'BMW 320i', 'BCD0J12', 2023, '9BD01234567890123', 'Branco', cat_luxo, status_disponivel, 450.00, 8000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'BCD0J12');
+    
+    -- Pickups (chassi corrigido para não conflitar com Onix)
+    INSERT INTO veiculo (modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem)
+    SELECT 'Toyota Hilux', 'KLM3M45', 2023, '9BD99887766554433', 'Branco', cat_pickup, status_manutencao, 320.00, 12000
+    WHERE NOT EXISTS (SELECT 1 FROM veiculo WHERE placa = 'KLM3M45');
+    
+    RAISE NOTICE 'Veículos inseridos/verificados com sucesso!';
+END $$;
+
+-- =====================================================
+-- INSERIR ALUGUÉIS
+-- =====================================================
+
+DO $$
+DECLARE
+    motorista1 INTEGER;
+    motorista2 INTEGER;
+    motorista3 INTEGER;
+    veiculo1 INTEGER;
+    veiculo2 INTEGER;
+    veiculo3 INTEGER;
+    atendente1 INTEGER;
+    atendente2 INTEGER;
+    cliente1 INTEGER;
+    cliente2 INTEGER;
+BEGIN
+    -- Buscar IDs existentes (inseridos no script 04)
+    SELECT id INTO motorista1 FROM motorista WHERE cpf = '12345678901' LIMIT 1;
+    SELECT id INTO motorista2 FROM motorista WHERE cpf = '98765432101' LIMIT 1;
+    SELECT id INTO motorista3 FROM motorista WHERE cpf = '45678912301' LIMIT 1;
+    
+    SELECT id INTO veiculo1 FROM veiculo WHERE placa = 'GHI3C45' LIMIT 1; -- Onix (alugado)
+    SELECT id INTO veiculo2 FROM veiculo WHERE placa = 'JKL4D56' LIMIT 1; -- Corolla
+    SELECT id INTO veiculo3 FROM veiculo WHERE placa = 'STU7G89' LIMIT 1; -- Compass
+    
+    SELECT id INTO atendente1 FROM atendente WHERE email = 'admin@locadora.com' LIMIT 1;
+    SELECT id INTO atendente2 FROM atendente WHERE email = 'joao@locadora.com' LIMIT 1;
+    
+    SELECT id INTO cliente1 FROM clientes WHERE cpf = '77788899900' LIMIT 1;
+    SELECT id INTO cliente2 FROM clientes WHERE cpf = '55555555000155' LIMIT 1;
+    
+    -- Aluguel 1 (ativo)
+    IF motorista1 IS NOT NULL AND veiculo1 IS NOT NULL AND atendente1 IS NOT NULL THEN
+        INSERT INTO aluguel (motorista_id, veiculo_id, atendente_id, cliente_id, 
+                            data_inicio, data_fim, data_contrato_inicial, data_contrato_final,
+                            data_pagamento, nome_periodo_contrato, forma_pagamento, 
+                            valor_total, valor_contrato, status, comprovante_url)
+        SELECT motorista1, veiculo1, atendente1, cliente1,
+               '2024-03-01', '2024-03-10', '2024-03-01', '2024-03-10',
+               '2024-03-01', 'Diária', 'Cartão Crédito',
+               1000.00, 1000.00, 'ativo', 'http://comprovantes.com/001'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM aluguel 
+            WHERE motorista_id = motorista1 AND veiculo_id = veiculo1 AND data_inicio = '2024-03-01'
+        );
+    END IF;
+    
+    -- Aluguel 2 (concluído)
+    IF motorista2 IS NOT NULL AND veiculo2 IS NOT NULL AND atendente2 IS NOT NULL THEN
+        INSERT INTO aluguel (motorista_id, veiculo_id, atendente_id, cliente_id, 
+                            data_inicio, data_fim, data_contrato_inicial, data_contrato_final,
+                            data_pagamento, nome_periodo_contrato, forma_pagamento, 
+                            valor_total, valor_contrato, status)
+        SELECT motorista2, veiculo2, atendente2, NULL,
+               '2024-02-15', '2024-02-20', '2024-02-15', '2024-02-20',
+               '2024-02-15', 'Diária', 'PIX',
+               900.00, 900.00, 'concluido'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM aluguel 
+            WHERE motorista_id = motorista2 AND veiculo_id = veiculo2 AND data_inicio = '2024-02-15'
+        );
+    END IF;
+    
+    -- Aluguel 3 (com multa)
+    IF motorista3 IS NOT NULL AND veiculo3 IS NOT NULL AND atendente1 IS NOT NULL AND cliente2 IS NOT NULL THEN
+        INSERT INTO aluguel (motorista_id, veiculo_id, atendente_id, cliente_id, 
+                            data_inicio, data_fim, data_contrato_inicial, data_contrato_final,
+                            data_pagamento, nome_periodo_contrato, forma_pagamento, 
+                            valor_total, valor_contrato, status)
+        SELECT motorista3, veiculo3, atendente1, cliente2,
+               '2024-01-10', '2024-01-20', '2024-01-10', '2024-01-20',
+               '2024-01-10', 'Diária', 'Dinheiro',
+               2500.00, 2500.00, 'concluido'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM aluguel 
+            WHERE motorista_id = motorista3 AND veiculo_id = veiculo3 AND data_inicio = '2024-01-10'
+        );
+    END IF;
+    
+    RAISE NOTICE 'Aluguéis inseridos/verificados com sucesso!';
+END $$;
+
+-- =====================================================
+-- INSERIR MANUTENÇÕES
+-- =====================================================
+
+DO $$
+DECLARE
+    veiculo_manutencao INTEGER;
+    veiculo_revisao INTEGER;
+    veiculo_pneus INTEGER;
+BEGIN
+    SELECT id INTO veiculo_manutencao FROM veiculo WHERE placa = 'KLM3M45' LIMIT 1; -- Hilux em manutenção
+    SELECT id INTO veiculo_revisao FROM veiculo WHERE placa = 'STU7G89' LIMIT 1; -- Compass
+    SELECT id INTO veiculo_pneus FROM veiculo WHERE placa = 'DEF2B34' LIMIT 1; -- Gol
+    
+    IF veiculo_manutencao IS NOT NULL THEN
+        INSERT INTO manutencao (veiculo_id, descricao, data_inicio, data_fim, custo, tipo)
+        SELECT veiculo_manutencao, 'Troca de óleo e revisão completa', '2024-03-05', NULL, 850.00, 'preventiva'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM manutencao WHERE veiculo_id = veiculo_manutencao AND data_inicio = '2024-03-05'
+        );
+    END IF;
+    
+    IF veiculo_revisao IS NOT NULL THEN
+        INSERT INTO manutencao (veiculo_id, descricao, data_inicio, data_fim, custo, tipo)
+        SELECT veiculo_revisao, 'Revisão de 25.000km', '2024-02-20', '2024-02-22', 1200.00, 'revisao'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM manutencao WHERE veiculo_id = veiculo_revisao AND data_inicio = '2024-02-20'
+        );
+    END IF;
+    
+    IF veiculo_pneus IS NOT NULL THEN
+        INSERT INTO manutencao (veiculo_id, descricao, data_inicio, data_fim, custo, tipo)
+        SELECT veiculo_pneus, 'Troca de pneus dianteiros', '2024-03-10', '2024-03-10', 600.00, 'pneus'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM manutencao WHERE veiculo_id = veiculo_pneus AND data_inicio = '2024-03-10'
+        );
+    END IF;
+    
+    RAISE NOTICE 'Manutenções inseridas/verificadas com sucesso!';
+END $$;
+
+-- =====================================================
+-- INSERIR MULTAS
+-- =====================================================
+
+DO $$
+DECLARE
+    aluguel1 INTEGER;
+    aluguel3 INTEGER;
+BEGIN
+    SELECT id INTO aluguel1 FROM aluguel WHERE data_inicio = '2024-03-01' LIMIT 1;
+    SELECT id INTO aluguel3 FROM aluguel WHERE data_inicio = '2024-01-10' LIMIT 1;
+    
+    IF aluguel1 IS NOT NULL THEN
+        INSERT INTO multa (aluguel_id, descricao, valor, data_multa, status)
+        SELECT aluguel1, 'Devolução com atraso de 2 dias', 200.00, '2024-03-12', 'pendente'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM multa WHERE aluguel_id = aluguel1 AND descricao LIKE '%atraso%'
+        );
+    END IF;
+    
+    IF aluguel3 IS NOT NULL THEN
+        INSERT INTO multa (aluguel_id, descricao, valor, data_multa, status)
+        SELECT aluguel3, 'Multa por sujeira excessiva', 150.00, '2024-01-21', 'pago'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM multa WHERE aluguel_id = aluguel3 AND descricao LIKE '%sujeira%'
+        );
+    END IF;
+    
+    RAISE NOTICE 'Multas inseridas/verificadas com sucesso!';
+END $$;
+
+-- =====================================================
+-- RESUMO FINAL
+-- =====================================================
+
+SELECT 
+    (SELECT COUNT(*) FROM veiculo) as total_veiculos,
+    (SELECT COUNT(*) FROM aluguel) as total_alugueis,
+    (SELECT COUNT(*) FROM manutencao) as total_manutencoes,
+    (SELECT COUNT(*) FROM multa) as total_multas;

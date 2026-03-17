@@ -1,0 +1,20 @@
+-- Versão: 1.0
+-- Ação: update
+-- Descrição: Exemplos de operações UPDATE
+
+-- Atualizar quilometragem após uso
+UPDATE veiculo 
+SET quilometragem = quilometragem + 500 
+WHERE id IN (SELECT veiculo_id FROM aluguel WHERE status = 'ativo');
+
+-- Marcar multa como paga
+UPDATE multa 
+SET status = 'pago' 
+WHERE id = 1;
+
+-- Atualizar status do veículo após manutenção
+UPDATE veiculo 
+SET status_id = (SELECT id FROM status_veiculo WHERE nome = 'Disponível')
+WHERE id IN (SELECT veiculo_id FROM manutencao WHERE data_fim IS NOT NULL);
+
+SELECT 'Updates executados!' as mensagem;

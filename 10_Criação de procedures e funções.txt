@@ -1,0 +1,205 @@
+-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação de procedures e funções
+
+-- Procedure para calcular valor total com multas
+CREATE OR REPLACE FUNCTION calcular_valor_final(p_aluguel_id INTEGER)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_valor_contrato DECIMAL;
+    v_total_multas DECIMAL;
+    v_valor_final DECIMAL;
+BEGIN
+    -- Buscar valor do contrato
+    SELECT valor_contrato INTO v_valor_contrato
+    FROM aluguel WHERE id = p_aluguel_id;
+    
+    -- Somar multas pendentes
+    SELECT COALESCE(SUM(valor), 0) INTO v_total_multas
+    FROM multa WHERE aluguel_id = p_aluguel_id AND status = 'pendente';
+    
+    -- Calcular valor final
+    v_valor_final := v_valor_contrato + v_total_multas;
+    
+    RETURN v_valor_final;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure para finalizar aluguel
+CREATE OR REPLACE PROCEDURE finalizar_aluguel(
+    p_aluguel_id INTEGER,
+    p_data_pagamento DATE
+) AS $$
+DECLARE
+    v_veiculo_id INTEGER;
+BEGIN
+    -- Atualizar status do aluguel
+    UPDATE aluguel 
+    SET status = 'concluido', 
+        data_pagamento = p_data_pagamento
+    WHERE id = p_aluguel_id
+    RETURNING veiculo_id INTO v_veiculo_id;
+    
+    -- Liberar veículo
+    UPDATE veiculo 
+    SET status_id = (SELECT id FROM status_veiculo WHERE nome = 'Disponível')
+    WHERE id = v_veiculo_id;
+    
+    RAISE NOTICE 'Aluguel % finalizado com sucesso!', p_aluguel_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT 'Procedures criadas com sucesso!' as mensagem;-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação de procedures e funções
+
+-- Procedure para calcular valor total com multas
+CREATE OR REPLACE FUNCTION calcular_valor_final(p_aluguel_id INTEGER)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_valor_contrato DECIMAL;
+    v_total_multas DECIMAL;
+    v_valor_final DECIMAL;
+BEGIN
+    -- Buscar valor do contrato
+    SELECT valor_contrato INTO v_valor_contrato
+    FROM aluguel WHERE id = p_aluguel_id;
+    
+    -- Somar multas pendentes
+    SELECT COALESCE(SUM(valor), 0) INTO v_total_multas
+    FROM multa WHERE aluguel_id = p_aluguel_id AND status = 'pendente';
+    
+    -- Calcular valor final
+    v_valor_final := v_valor_contrato + v_total_multas;
+    
+    RETURN v_valor_final;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure para finalizar aluguel
+CREATE OR REPLACE PROCEDURE finalizar_aluguel(
+    p_aluguel_id INTEGER,
+    p_data_pagamento DATE
+) AS $$
+DECLARE
+    v_veiculo_id INTEGER;
+BEGIN
+    -- Atualizar status do aluguel
+    UPDATE aluguel 
+    SET status = 'concluido', 
+        data_pagamento = p_data_pagamento
+    WHERE id = p_aluguel_id
+    RETURNING veiculo_id INTO v_veiculo_id;
+    
+    -- Liberar veículo
+    UPDATE veiculo 
+    SET status_id = (SELECT id FROM status_veiculo WHERE nome = 'Disponível')
+    WHERE id = v_veiculo_id;
+    
+    RAISE NOTICE 'Aluguel % finalizado com sucesso!', p_aluguel_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT 'Procedures criadas com sucesso!' as mensagem;-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação de procedures e funções
+
+-- Procedure para calcular valor total com multas
+CREATE OR REPLACE FUNCTION calcular_valor_final(p_aluguel_id INTEGER)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_valor_contrato DECIMAL;
+    v_total_multas DECIMAL;
+    v_valor_final DECIMAL;
+BEGIN
+    -- Buscar valor do contrato
+    SELECT valor_contrato INTO v_valor_contrato
+    FROM aluguel WHERE id = p_aluguel_id;
+    
+    -- Somar multas pendentes
+    SELECT COALESCE(SUM(valor), 0) INTO v_total_multas
+    FROM multa WHERE aluguel_id = p_aluguel_id AND status = 'pendente';
+    
+    -- Calcular valor final
+    v_valor_final := v_valor_contrato + v_total_multas;
+    
+    RETURN v_valor_final;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure para finalizar aluguel
+CREATE OR REPLACE PROCEDURE finalizar_aluguel(
+    p_aluguel_id INTEGER,
+    p_data_pagamento DATE
+) AS $$
+DECLARE
+    v_veiculo_id INTEGER;
+BEGIN
+    -- Atualizar status do aluguel
+    UPDATE aluguel 
+    SET status = 'concluido', 
+        data_pagamento = p_data_pagamento
+    WHERE id = p_aluguel_id
+    RETURNING veiculo_id INTO v_veiculo_id;
+    
+    -- Liberar veículo
+    UPDATE veiculo 
+    SET status_id = (SELECT id FROM status_veiculo WHERE nome = 'Disponível')
+    WHERE id = v_veiculo_id;
+    
+    RAISE NOTICE 'Aluguel % finalizado com sucesso!', p_aluguel_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT 'Procedures criadas com sucesso!' as mensagem;-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação de procedures e funções
+
+-- Procedure para calcular valor total com multas
+CREATE OR REPLACE FUNCTION calcular_valor_final(p_aluguel_id INTEGER)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_valor_contrato DECIMAL;
+    v_total_multas DECIMAL;
+    v_valor_final DECIMAL;
+BEGIN
+    -- Buscar valor do contrato
+    SELECT valor_contrato INTO v_valor_contrato
+    FROM aluguel WHERE id = p_aluguel_id;
+    
+    -- Somar multas pendentes
+    SELECT COALESCE(SUM(valor), 0) INTO v_total_multas
+    FROM multa WHERE aluguel_id = p_aluguel_id AND status = 'pendente';
+    
+    -- Calcular valor final
+    v_valor_final := v_valor_contrato + v_total_multas;
+    
+    RETURN v_valor_final;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure para finalizar aluguel
+CREATE OR REPLACE PROCEDURE finalizar_aluguel(
+    p_aluguel_id INTEGER,
+    p_data_pagamento DATE
+) AS $$
+DECLARE
+    v_veiculo_id INTEGER;
+BEGIN
+    -- Atualizar status do aluguel
+    UPDATE aluguel 
+    SET status = 'concluido', 
+        data_pagamento = p_data_pagamento
+    WHERE id = p_aluguel_id
+    RETURNING veiculo_id INTO v_veiculo_id;
+    
+    -- Liberar veículo
+    UPDATE veiculo 
+    SET status_id = (SELECT id FROM status_veiculo WHERE nome = 'Disponível')
+    WHERE id = v_veiculo_id;
+    
+    RAISE NOTICE 'Aluguel % finalizado com sucesso!', p_aluguel_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT 'Procedures criadas com sucesso!' as mensagem;

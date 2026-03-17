@@ -1,0 +1,14 @@
+-- Versão: 1.0
+-- Ação: delete
+-- Descrição: Exemplos de operações DELETE
+
+-- Remover multas pagas antigas
+DELETE FROM multa 
+WHERE status = 'pago' 
+AND data_multa < CURRENT_DATE - INTERVAL '30 days'
+RETURNING *;
+
+-- Tentativa de DELETE que deve falhar (protegido por FK)
+-- DELETE FROM motorista WHERE id = 1; -- Isso vai gerar erro (tem aluguel)
+
+SELECT 'Deletes executados!' as mensagem;

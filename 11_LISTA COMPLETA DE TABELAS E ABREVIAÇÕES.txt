@@ -1,0 +1,309 @@
+-- Versão: 1.0
+-- Ação: select
+-- Descrição: Listar todas as tabelas com suas abreviações para consultas
+
+-- =====================================================
+-- LISTA COMPLETA DE TABELAS E ABREVIAÇÕES
+-- =====================================================
+
+-- 1. TABELA ATENDENTE (AT)
+SELECT
+    AT.id as "ID",
+    AT.nome as "Nome",
+    AT.cpf as "CPF",
+    AT.email as "E-mail",
+    AT.nivel_acesso as "Nível",
+    AT.criado_em as "Criado em"
+FROM
+    atendente AT
+ORDER BY
+    AT.id;
+
+-- 2. TABELA MOTORISTA (M)
+SELECT
+    M.id as "ID",
+    M.nome as "Nome",
+    M.cpf as "CPF",
+    M.cnh as "CNH",
+    M.validade_cnh as "Validade",
+    M.telefone as "Telefone",
+    M.email as "E-mail",
+    M.status as "Status",
+    M.criado_em as "Criado em"
+FROM
+    motorista M
+ORDER BY
+    M.id;
+
+-- 3. TABELA CLIENTES (C)
+SELECT
+    C.id as "ID",
+    C.nome as "Nome",
+    C.cpf as "CPF/CNPJ",
+    C.email as "E-mail",
+    C.criado_em as "Criado em"
+FROM
+    clientes C
+ORDER BY
+    C.id;
+
+-- 4. TABELA CATEGORIA_VEICULO (CV)
+SELECT
+    CV.id as "ID",
+    CV.nome as "Categoria",
+    CV.descricao as "Descrição",
+    CV.criado_em as "Criado em"
+FROM
+    categoria_veiculo CV
+ORDER BY
+    CV.id;
+
+-- 5. TABELA STATUS_VEICULO (SV)
+SELECT
+    SV.id as "ID",
+    SV.nome as "Status",
+    SV.criado_em as "Criado em"
+FROM
+    status_veiculo SV
+ORDER BY
+    SV.id;
+
+-- 6. TABELA VEICULO (V)
+SELECT
+    V.id as "ID",
+    V.modelo as "Modelo",
+    V.placa as "Placa",
+    V.ano as "Ano",
+    V.chassi as "Chassi",
+    V.cor as "Cor",
+    V.categoria_id as "ID Categoria",
+    V.status_id as "ID Status",
+    V.valor_diaria as "Diária",
+    V.quilometragem as "KM",
+    V.criado_em as "Criado em"
+FROM
+    veiculo V
+ORDER BY
+    V.id;
+
+-- 7. TABELA ALUGUEL (A)
+SELECT
+    A.id as "ID",
+    A.motorista_id as "ID Motorista",
+    A.veiculo_id as "ID Veículo",
+    A.atendente_id as "ID Atendente",
+    A.cliente_id as "ID Cliente",
+    A.data_inicio as "Início",
+    A.data_fim as "Fim",
+    A.data_contrato_inicial as "Contrato Início",
+    A.data_contrato_final as "Contrato Fim",
+    A.data_pagamento as "Pagamento",
+    A.nome_periodo_contrato as "Período",
+    A.forma_pagamento as "Forma Pagto",
+    A.valor_total as "Valor Total",
+    A.valor_contrato as "Valor Contrato",
+    A.status as "Status",
+    A.comprovante_url as "Comprovante",
+    A.criado_em as "Criado em"
+FROM
+    aluguel A
+ORDER BY
+    A.id;
+
+-- 8. TABELA MANUTENCAO (MAN)
+SELECT
+    MAN.id as "ID",
+    MAN.veiculo_id as "ID Veículo",
+    MAN.descricao as "Descrição",
+    MAN.data_inicio as "Início",
+    MAN.data_fim as "Fim",
+    MAN.custo as "Custo",
+    MAN.tipo as "Tipo",
+    MAN.criado_em as "Criado em"
+FROM
+    manutencao MAN
+ORDER BY
+    MAN.id;
+
+-- 9. TABELA MULTA (MUL)
+SELECT
+    MUL.id as "ID",
+    MUL.aluguel_id as "ID Aluguel",
+    MUL.descricao as "Descrição",
+    MUL.valor as "Valor",
+    MUL.data_multa as "Data",
+    MUL.status as "Status",
+    MUL.criado_em as "Criado em"
+FROM
+    multa MUL
+ORDER BY
+    MUL.id;
+
+-- =====================================================
+-- RESUMO DAS ABREVIAÇÕES PARA CONSULTAS
+-- =====================================================
+
+SELECT '=== TABELA DE ABREVIAÇÕES ===' as "INFORMAÇÃO";
+SELECT 'AT → atendente' as "Abreviação";
+SELECT 'M → motorista' as "Abreviação";
+SELECT 'C → clientes' as "Abreviação";
+SELECT 'CV → categoria_veiculo' as "Abreviação";
+SELECT 'SV → status_veiculo' as "Abreviação";
+SELECT 'V → veiculo' as "Abreviação";
+SELECT 'A → aluguel' as "Abreviação";
+SELECT 'MAN → manutencao' as "Abreviação";
+SELECT 'MUL → multa' as "Abreviação";
+
+-- =====================================================
+-- EXEMPLO DE COMO USAR AS ABREVIAÇÕES
+-- =====================================================
+
+SELECT '=== EXEMPLO DE CONSULTA COM ABREVIAÇÕES ===' as " ";
+
+SELECT
+    A.id as "Aluguel",
+    M.nome as "Motorista",
+    V.modelo as "Veículo",
+    V.placa as "Placa",
+    AT.nome as "Atendente",
+    C.nome as "Cliente",
+    A.valor_total as "Valor"
+FROM
+    aluguel A,
+    motorista M,
+    veiculo V,
+    atendente AT,
+    clientes C
+WHERE
+    A.motorista_id = M.id
+    AND A.veiculo_id = V.id
+    AND A.atendente_id = AT.id
+    AND A.cliente_id = C.id
+    AND A.status = 'ativo'
+ORDER BY
+    A.data_inicio DESC
+LIMIT 5;
+
+-- =====================================================
+-- CONTAGEM DE REGISTROS POR TABELA
+-- =====================================================
+
+SELECT '=== CONTAGEM DE REGISTROS ===' as " ";
+
+SELECT
+    'atendente' as "Tabela",
+    COUNT(*) as "Total",
+    'AT' as "Abreviação"
+FROM
+    atendente
+UNION ALL
+SELECT
+    'motorista',
+    COUNT(*),
+    'M'
+FROM
+    motorista
+UNION ALL
+SELECT
+    'clientes',
+    COUNT(*),
+    'C'
+FROM
+    clientes
+UNION ALL
+SELECT
+    'categoria_veiculo',
+    COUNT(*),
+    'CV'
+FROM
+    categoria_veiculo
+UNION ALL
+SELECT
+    'status_veiculo',
+    COUNT(*),
+    'SV'
+FROM
+    status_veiculo
+UNION ALL
+SELECT
+    'veiculo',
+    COUNT(*),
+    'V'
+FROM
+    veiculo
+UNION ALL
+SELECT
+    'aluguel',
+    COUNT(*),
+    'A'
+FROM
+    aluguel
+UNION ALL
+SELECT
+    'manutencao',
+    COUNT(*),
+    'MAN'
+FROM
+    manutencao
+UNION ALL
+SELECT
+    'multa',
+    COUNT(*),
+    'MUL'
+FROM
+    multa
+ORDER BY
+    "Tabela";
+
+-- =====================================================
+-- DICIONÁRIO DE DADOS COMPLETO
+-- =====================================================
+
+SELECT '=== DICIONÁRIO DE DADOS DO SISTEMA ===' as " ";
+
+SELECT
+    'ATENDENTE' as "Tabela",
+    'AT' as "Abrev",
+    'id, nome, cpf, email, senha, nivel_acesso, criado_em' as "Colunas"
+UNION ALL
+SELECT
+    'MOTORISTA',
+    'M',
+    'id, nome, cpf, data_nascimento, cnh, validade_cnh, telefone, email, endereco, status, criado_em'
+UNION ALL
+SELECT
+    'CLIENTES',
+    'C',
+    'id, nome, cpf, email, criado_em'
+UNION ALL
+SELECT
+    'CATEGORIA_VEICULO',
+    'CV',
+    'id, nome, descricao, criado_em'
+UNION ALL
+SELECT
+    'STATUS_VEICULO',
+    'SV',
+    'id, nome, criado_em'
+UNION ALL
+SELECT
+    'VEICULO',
+    'V',
+    'id, modelo, placa, ano, chassi, cor, categoria_id, status_id, valor_diaria, quilometragem, criado_em'
+UNION ALL
+SELECT
+    'ALUGUEL',
+    'A',
+    'id, motorista_id, veiculo_id, atendente_id, cliente_id, data_inicio, data_fim, data_contrato_inicial, data_contrato_final, data_pagamento, nome_periodo_contrato, forma_pagamento, valor_total, valor_contrato, status, comprovante_url, criado_em'
+UNION ALL
+SELECT
+    'MANUTENCAO',
+    'MAN',
+    'id, veiculo_id, descricao, data_inicio, data_fim, custo, tipo, criado_em'
+UNION ALL
+SELECT
+    'MULTA',
+    'MUL',
+    'id, aluguel_id, descricao, valor, data_multa, status, criado_em'
+ORDER BY
+    "Tabela";

@@ -1,0 +1,242 @@
+
+
+-- Constraints para motorista
+DO $$
+BEGIN
+    -- Verificar se a constraint já existe antes de adicionar
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'chk_status_motorista' 
+        AND conrelid = 'motorista'::regclass
+    ) THEN
+        ALTER TABLE motorista 
+        ADD CONSTRAINT chk_status_motorista 
+        CHECK (status IN ('ativo', 'inativo', 'bloqueado'));
+        
+        RAISE NOTICE 'Constraint chk_status_motorista adicionada';
+    ELSE
+        RAISE NOTICE 'Constraint chk_status_motorista já existe';
+    END IF;
+END $$;
+
+-- Constraints para veiculo
+DO $$
+BEGIN
+    -- Foreign key para categoria
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_veiculo_categoria'
+    ) THEN
+        ALTER TABLE veiculo ADD CONSTRAINT fk_veiculo_categoria 
+        FOREIGN KEY (categoria_id) REFERENCES categoria_veiculo(id) ON DELETE RESTRICT;
+        RAISE NOTICE 'FK fk_veiculo_categoria adicionada';
+    END IF;
+    
+    -- Foreign key para status
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_veiculo_status'
+    ) THEN
+        ALTER TABLE veiculo ADD CONSTRAINT fk_veiculo_status 
+        FOREIGN KEY (status_id) REFERENCES status_veiculo(id) ON DELETE RESTRICT;
+        RAISE NOTICE 'FK fk_veiculo_status adicionada';
+    END IF;
+    
+    -- Check para ano
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_ano_veiculo'
+    ) THEN
+        ALTER TABLE veiculo ADD CONSTRAINT chk_ano_veiculo 
+        CHECK (ano >= 1900 AND ano <= EXTRACT(YEAR FROM CURRENT_DATE) + 1);
+        RAISE NOTICE 'Constraint chk_ano_veiculo adicionada';
+    END IF;
+    
+    -- Check para valor diaria
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_valor_diaria'
+    ) THEN
+        ALTER TABLE veiculo ADD CONSTRAINT chk_valor_diaria 
+        CHECK (valor_diaria > 0);
+        RAISE NOTICE 'Constraint chk_valor_diaria adicionada';
+    END IF;
+END $$;
+
+-- Constraints para aluguel
+DO $$
+BEGIN
+    -- FK motorista
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_aluguel_motorista'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT fk_aluguel_motorista 
+        FOREIGN KEY (motorista_id) REFERENCES motorista(id) ON DELETE RESTRICT;
+        RAISE NOTICE 'FK fk_aluguel_motorista adicionada';
+    END IF;
+    
+    -- FK veiculo
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_aluguel_veiculo'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT fk_aluguel_veiculo 
+        FOREIGN KEY (veiculo_id) REFERENCES veiculo(id) ON DELETE RESTRICT;
+        RAISE NOTICE 'FK fk_aluguel_veiculo adicionada';
+    END IF;
+    
+    -- FK atendente
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_aluguel_atendente'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT fk_aluguel_atendente 
+        FOREIGN KEY (atendente_id) REFERENCES atendente(id) ON DELETE RESTRICT;
+        RAISE NOTICE 'FK fk_aluguel_atendente adicionada';
+    END IF;
+    
+    -- FK cliente
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_aluguel_cliente'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT fk_aluguel_cliente 
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL;
+        RAISE NOTICE 'FK fk_aluguel_cliente adicionada';
+    END IF;
+    
+    -- Check datas
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_datas_aluguel'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT chk_datas_aluguel 
+        CHECK (data_inicio <= data_fim AND 
+               data_contrato_inicial <= data_contrato_final AND 
+               data_inicio >= data_contrato_inicial AND 
+               data_fim <= data_contrato_final);
+        RAISE NOTICE 'Constraint chk_datas_aluguel adicionada';
+    END IF;
+    
+    -- Check valores
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_valores_aluguel'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT chk_valores_aluguel 
+        CHECK (valor_total >= 0 AND valor_contrato >= 0 AND valor_total >= valor_contrato);
+        RAISE NOTICE 'Constraint chk_valores_aluguel adicionada';
+    END IF;
+    
+    -- Check status
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_status_aluguel'
+    ) THEN
+        ALTER TABLE aluguel ADD CONSTRAINT chk_status_aluguel 
+        CHECK (status IN ('ativo', 'concluido', 'cancelado', 'pendente'));
+        RAISE NOTICE 'Constraint chk_status_aluguel adicionada';
+    END IF;
+END $$;
+
+-- Constraints para manutencao
+DO $$
+BEGIN
+    -- FK veiculo
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_manutencao_veiculo'
+    ) THEN
+        ALTER TABLE manutencao ADD CONSTRAINT fk_manutencao_veiculo 
+        FOREIGN KEY (veiculo_id) REFERENCES veiculo(id) ON DELETE CASCADE;
+        RAISE NOTICE 'FK fk_manutencao_veiculo adicionada';
+    END IF;
+    
+    -- Check datas
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_datas_manutencao'
+    ) THEN
+        ALTER TABLE manutencao ADD CONSTRAINT chk_datas_manutencao 
+        CHECK (data_inicio <= COALESCE(data_fim, data_inicio));
+        RAISE NOTICE 'Constraint chk_datas_manutencao adicionada';
+    END IF;
+    
+    -- Check tipo
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_tipo_manutencao'
+    ) THEN
+        ALTER TABLE manutencao ADD CONSTRAINT chk_tipo_manutencao 
+        CHECK (tipo IN ('preventiva', 'corretiva', 'revisao', 'pneus', 'funilaria'));
+        RAISE NOTICE 'Constraint chk_tipo_manutencao adicionada';
+    END IF;
+END $$;
+
+-- Constraints para multa
+DO $$
+BEGIN
+    -- FK aluguel
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_multa_aluguel'
+    ) THEN
+        ALTER TABLE multa ADD CONSTRAINT fk_multa_aluguel 
+        FOREIGN KEY (aluguel_id) REFERENCES aluguel(id) ON DELETE CASCADE;
+        RAISE NOTICE 'FK fk_multa_aluguel adicionada';
+    END IF;
+    
+    -- Check valor
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_valor_multa'
+    ) THEN
+        ALTER TABLE multa ADD CONSTRAINT chk_valor_multa 
+        CHECK (valor > 0);
+        RAISE NOTICE 'Constraint chk_valor_multa adicionada';
+    END IF;
+    
+    -- Check status
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_status_multa'
+    ) THEN
+        ALTER TABLE multa ADD CONSTRAINT chk_status_multa 
+        CHECK (status IN ('pendente', 'pago', 'cancelado'));
+        RAISE NOTICE 'Constraint chk_status_multa adicionada';
+    END IF;
+END $$;
+
+-- =====================================================
+-- ÍNDICES (com IF NOT EXISTS - isso funciona!)
+-- =====================================================
+
+-- Motorista
+CREATE INDEX IF NOT EXISTS idx_motorista_cpf ON motorista(cpf);
+CREATE INDEX IF NOT EXISTS idx_motorista_email ON motorista(email);
+CREATE INDEX IF NOT EXISTS idx_motorista_status ON motorista(status);
+CREATE INDEX IF NOT EXISTS idx_motorista_cnh ON motorista(cnh);
+
+-- Clientes
+CREATE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf);
+CREATE INDEX IF NOT EXISTS idx_clientes_email ON clientes(email);
+
+-- Veiculo
+CREATE INDEX IF NOT EXISTS idx_veiculo_placa ON veiculo(placa);
+CREATE INDEX IF NOT EXISTS idx_veiculo_categoria ON veiculo(categoria_id);
+CREATE INDEX IF NOT EXISTS idx_veiculo_status ON veiculo(status_id);
+CREATE INDEX IF NOT EXISTS idx_veiculo_chassi ON veiculo(chassi);
+
+-- Aluguel
+CREATE INDEX IF NOT EXISTS idx_aluguel_motorista ON aluguel(motorista_id);
+CREATE INDEX IF NOT EXISTS idx_aluguel_veiculo ON aluguel(veiculo_id);
+CREATE INDEX IF NOT EXISTS idx_aluguel_atendente ON aluguel(atendente_id);
+CREATE INDEX IF NOT EXISTS idx_aluguel_cliente ON aluguel(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_aluguel_datas ON aluguel(data_inicio, data_fim);
+CREATE INDEX IF NOT EXISTS idx_aluguel_status ON aluguel(status);
+
+-- Manutencao
+CREATE INDEX IF NOT EXISTS idx_manutencao_veiculo ON manutencao(veiculo_id);
+CREATE INDEX IF NOT EXISTS idx_manutencao_datas ON manutencao(data_inicio, data_fim);
+
+-- Multa
+CREATE INDEX IF NOT EXISTS idx_multa_aluguel ON multa(aluguel_id);
+CREATE INDEX IF NOT EXISTS idx_multa_status ON multa(status);
+
+-- =====================================================
+-- RESUMO
+-- =====================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'CONSTRAINTS E ÍNDICES ADICIONADOS';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE '✓ Constraints verificadas e adicionadas quando necessário';
+    RAISE NOTICE '✓ Índices criados (ou já existentes)';
+    RAISE NOTICE '==========================================';
+END $$;

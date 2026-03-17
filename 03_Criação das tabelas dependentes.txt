@@ -1,0 +1,83 @@
+
+-- Tabela de motoristas
+CREATE TABLE IF NOT EXISTS motorista (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    data_nascimento DATE NOT NULL,
+    cnh VARCHAR(20) NOT NULL UNIQUE,
+    validade_cnh DATE NOT NULL,
+    telefone VARCHAR(20),
+    email VARCHAR(200) NOT NULL UNIQUE,
+    endereco TEXT,
+    status VARCHAR(20) DEFAULT 'ativo',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de clientes
+CREATE TABLE IF NOT EXISTS clientes (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    email VARCHAR(200) NOT NULL UNIQUE,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de veículos
+CREATE TABLE IF NOT EXISTS veiculo (
+    id SERIAL PRIMARY KEY,
+    modelo VARCHAR(100) NOT NULL,
+    placa VARCHAR(10) NOT NULL UNIQUE,
+    ano INTEGER NOT NULL,
+    chassi VARCHAR(17) NOT NULL UNIQUE,
+    cor VARCHAR(50),
+    categoria_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    valor_diaria DECIMAL(10,2) NOT NULL,
+    quilometragem INTEGER DEFAULT 0,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de aluguéis
+CREATE TABLE IF NOT EXISTS aluguel (
+    id SERIAL PRIMARY KEY,
+    motorista_id INTEGER NOT NULL,
+    veiculo_id INTEGER NOT NULL,
+    atendente_id INTEGER NOT NULL,
+    cliente_id INTEGER,
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL,
+    data_contrato_inicial DATE NOT NULL,
+    data_contrato_final DATE NOT NULL,
+    data_pagamento DATE,
+    nome_periodo_contrato VARCHAR(100),
+    forma_pagamento VARCHAR(50),
+    valor_total DECIMAL(10,2) NOT NULL,
+    valor_contrato DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'ativo',
+    comprovante_url TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de manutenções
+CREATE TABLE IF NOT EXISTS manutencao (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER NOT NULL,
+    descricao TEXT NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_fim DATE,
+    custo DECIMAL(10,2),
+    tipo VARCHAR(50) NOT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de multas
+CREATE TABLE IF NOT EXISTS multa (
+    id SERIAL PRIMARY KEY,
+    aluguel_id INTEGER NOT NULL,
+    descricao TEXT NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    data_multa DATE NOT NULL,
+    status VARCHAR(20) DEFAULT 'pendente',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

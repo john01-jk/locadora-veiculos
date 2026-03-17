@@ -1,0 +1,133 @@
+
+
+    MOTORISTA {
+        int id
+        string nome
+        string cpf
+        date data_nascimento
+        string cnh
+        date validade_cnh
+        string telefone
+        string email
+        string endereco
+        string status
+        datetime criado_em
+		
+    }
+
+    VEICULO {
+        int id
+        string modelo
+        string placa
+        int ano
+        string chassi
+        string cor
+        int categoria_id
+        int status_id
+        decimal valor_diaria
+        int quilometragem
+        datetime criado_em
+    }
+
+    ALUGUEL {
+        int id
+        int motorista_id
+        int veiculo_id
+        int atendente_id
+        int cliente_id
+        date data_inicio
+        date data_fim
+        decimal valor_total
+        string status
+        datetime criado_em
+    }
+
+    CONTRATOS {
+        int id
+        int aluguel_id
+        int cliente_id
+        int veiculo_id
+        int periodo_de_contrato_id
+        int forma_pagamento_id
+        decimal valor
+        date data_pagamento
+        string status
+        string comprovante_url
+    }
+
+    PERIODO_DE_CONTRATOS {
+        int id
+        date data_contrato_inicial
+        date data_contrato_final
+        string nome
+    }
+
+    MANUTENCAO {
+        int id
+        int veiculo_id
+        string descricao
+        date data_inicio
+        date data_fim
+        decimal custo
+        string tipo
+    }
+
+    MULTA {
+        int id
+        int aluguel_id
+        string descricao
+        decimal valor
+        date data_multa
+        string status
+    }
+
+    CATEGORIA_VEICULO {
+        int id
+        string nome
+        string descricao
+    }
+
+    STATUS_VEICULO {
+        int id
+        string nome
+    }
+
+    FORMA_PAGAMENTO {
+        int id
+        string nome
+    }
+
+    ATENDENTES {
+        int id
+        string nome
+        string cpf
+        string email
+        string senha
+        string nivel_acesso
+    }
+
+    CLIENTES {
+        int id
+        string nome
+        string cpf
+        string email
+    }
+
+    MOTORISTA ||--o{ ALUGUEL : realiza
+    VEICULO ||--o{ ALUGUEL : alugado_em
+    ATENDENTES ||--o{ ALUGUEL : registra
+    CLIENTES ||--o{ ALUGUEL : vinculado
+
+    ALUGUEL ||--o{ CONTRATOS : gera
+    PERIODO_DE_CONTRATOS ||--o{ CONTRATOS : define
+    FORMA_PAGAMENTO ||--o{ CONTRATOS : utiliza
+
+    VEICULO ||--o{ MANUTENCAO : possui
+    ALUGUEL ||--o{ MULTA : pode_ter
+
+    CATEGORIA_VEICULO ||--o{ VEICULO : classifica
+    STATUS_VEICULO ||--o{ VEICULO : define
+    STATUS_VEICULO ||--o{ VEICULO : define
+    
+
+	

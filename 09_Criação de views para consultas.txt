@@ -1,0 +1,50 @@
+-- Versão: 1.0
+-- Ação: create
+-- Descrição: Criação de views para consultas
+
+-- View de veículos disponíveis
+CREATE OR REPLACE VIEW vw_veiculos_disponiveis AS
+SELECT 
+    v.id,
+    v.modelo,
+    v.placa,
+    v.ano,
+    v.cor,
+    v.valor_diaria,
+    v.quilometragem,
+    c.nome as categoria
+FROM veiculo v
+JOIN categoria_veiculo c ON v.categoria_id = c.id
+JOIN status_veiculo s ON v.status_id = s.id
+WHERE s.nome = 'Disponível'
+ORDER BY v.valor_diaria;
+
+-- View de aluguéis ativos
+CREATE OR REPLACE VIEW vw_alugueis_ativos AS
+SELECT 
+    a.id,
+    m.nome as motorista,
+    v.modelo as veiculo,
+    v.placa,
+    a.data_inicio,
+    a.data_fim,
+    a.valor_total,
+    a.status
+FROM aluguel a
+JOIN motorista m ON a.motorista_id = m.id
+JOIN veiculo v ON a.veiculo_id = v.id
+WHERE a.status = 'ativo';
+
+-- View de faturamento mensal
+CREATE OR REPLACE VIEW vw_faturamento_mensal AS
+SELECT 
+    EXTRACT(YEAR FROM data_pagamento) as ano,
+    EXTRACT(MONTH FROM data_pagamento) as mes,
+    COUNT(*) as total_alugueis,
+    SUM(valor_total) as faturamento
+FROM aluguel
+WHERE status = 'concluido'
+GROUP BY ano, mes
+ORDER BY ano DESC, mes DESC;
+
+SELECT 'Views criadas com sucesso!' as mensagem;
