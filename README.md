@@ -235,3 +235,153 @@ psql -d sua_database -f Inserção_de_dados_de_inovação.sql
 - CPFs e CNPJs são armazenados **sem pontuação**
 - Todos os scripts são idempotentes (podem ser executados mais de uma vez com segurança)
 - A tabela `aluguel` centraliza as informações de contrato (período, forma de pagamento, comprovante), eliminando tabelas auxiliares desnecessárias
+
+  ## 🚀 Benefícios do Modelo
+
+* ✔️ **Integridade garantida:** Constraints `CHECK` e `FOREIGN KEY` impedem dados inválidos (ex.: CNH vencida, valor de aluguel negativo, duplicidade de CPF/placa).
+* ✔️ **Proteção contra exclusões indevidas:** `ON DELETE RESTRICT` bloqueia remoção de registros com dependências ativas.
+* ✔️ **Consistência transacional:** Uso de chaves estrangeiras mantém a coerência entre aluguéis, veículos, motoristas e multas.
+* ✔️ **Automação de regras de negócio:** Pontuação automática no programa EcoDrive e geração de insights de manutenção preditiva.
+* ✔️ **Pronto para produção:** Estrutura normalizada, scripts versionados e protótipo de interface funcional.
+
+---
+
+## 🏆 Diferencial
+
+Este projeto se destaca por:
+
+* **Constraints avançadas** – Validações de domínio (níveis de acesso, datas futuras, valores positivos) diretamente no banco.
+* **Gamificação (EcoDrive)** – Sistema de pontuação e níveis de fidelidade (Bronze, Prata, Ouro) que incentiva bons motoristas com descontos progressivos.
+* **Inteligência de dados** – Alertas preditivos de manutenção baseados em quilometragem, tempo sem revisão e idade do veículo.
+* **Integridade referencial completa** – Relacionamentos bem definidos que evitam inconsistências operacionais.
+* **Interface profissional** – Protótipos HTML que demonstram a experiência do usuário com dashboards personalizados e telas de gestão.\
+
+## 📊 Modelo de Dados Relacional
+
+```mermaid
+erDiagram
+    MOTORISTA ||--o{ ALUGUEL : realiza
+    CLIENTES ||--o{ ALUGUEL : solicita
+    ATENDENTE ||--o{ ALUGUEL : registra
+    VEICULO ||--o{ ALUGUEL : utilizado_em
+    VEICULO ||--o{ MANUTENCAO : possui
+    ALUGUEL ||--o{ MULTA : gera
+    CATEGORIA_VEICULO ||--o{ VEICULO : classifica
+    STATUS_VEICULO ||--o{ VEICULO : define
+    MOTORISTA ||--|| PONTUACAO_MOTORISTA : possui
+    NIVEL_FIDELIDADE ||--o{ PONTUACAO_MOTORISTA : define_regras
+    VEICULO ||--o{ INSIGHT_IA_MANUTENCAO : monitorado_por
+
+    MOTORISTA {
+        int id
+        string nome
+        string cpf
+        date data_nascimento
+        string cnh
+        date validade_cnh
+        string telefone
+        string email
+        string endereco
+        string status
+        timestamp criado_em
+    }
+
+    CLIENTES {
+        int id
+        string nome
+        string cpf
+        string email
+        string telefone
+    }
+
+    ATENDENTE {
+        int id
+        string nome
+        string cpf
+        string email
+        string senha
+        string nivel_acesso
+    }
+
+    CATEGORIA_VEICULO {
+        int id
+        string nome
+        string descricao
+    }
+
+    STATUS_VEICULO {
+        int id
+        string nome
+    }
+
+    VEICULO {
+        int id
+        string modelo
+        string placa
+        int ano
+        string chassi
+        string cor
+        int categoria_id
+        int status_id
+        decimal valor_diaria
+        int quilometragem
+        timestamp criado_em
+    }
+
+    ALUGUEL {
+        int id
+        int motorista_id
+        int veiculo_id
+        int atendente_id
+        int cliente_id
+        date data_inicio
+        date data_fim
+        date data_pagamento
+        string forma_pagamento
+        decimal valor_total
+        string status
+        string comprovante_url
+        timestamp criado_em
+    }
+
+    MANUTENCAO {
+        int id
+        int veiculo_id
+        string descricao
+        date data_inicio
+        date data_fim
+        decimal custo
+        string tipo
+    }
+
+    MULTA {
+        int id
+        int aluguel_id
+        string descricao
+        decimal valor
+        date data_multa
+        string status
+    }
+
+    PONTUACAO_MOTORISTA {
+        int id
+        int motorista_id
+        int saldo_pontos
+        int nivel_id
+        timestamp ultima_atualizacao
+    }
+
+    NIVEL_FIDELIDADE {
+        int id
+        string nome
+        int pontos_minimos
+        decimal desconto_percentual
+    }
+
+    INSIGHT_IA_MANUTENCAO {
+        int id
+        int veiculo_id
+        string mensagem_alerta
+        decimal probabilidade_falha
+        date data_previsao
+    }
