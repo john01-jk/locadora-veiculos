@@ -1,0 +1,197 @@
+-- Versão: 1.0
+-- Ação: insert
+-- Descrição: Inserção de dados de inovação (gamificação e IA preditiva)
+
+-- =====================================================
+-- 1. INSERIR NÍVEIS DE FIDELIDADE
+-- =====================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'INSERINDO NÍVEIS DE FIDELIDADE...';
+    RAISE NOTICE '==========================================';
+
+    INSERT INTO nivel_fidelidade (nome, pontos_minimos, desconto_percentual)
+    SELECT 'Bronze', 0, 0.00
+    WHERE NOT EXISTS (SELECT 1 FROM nivel_fidelidade WHERE nome = 'Bronze');
+
+    IF FOUND THEN
+        RAISE NOTICE '✓ Nível Bronze inserido (0 pontos, 0%% desconto)';
+    ELSE
+        RAISE NOTICE '✗ Nível Bronze já existia';
+    END IF;
+
+    INSERT INTO nivel_fidelidade (nome, pontos_minimos, desconto_percentual)
+    SELECT 'Prata', 1000, 5.00
+    WHERE NOT EXISTS (SELECT 1 FROM nivel_fidelidade WHERE nome = 'Prata');
+
+    IF FOUND THEN
+        RAISE NOTICE '✓ Nível Prata inserido (1.000 pontos, 5%% desconto)';
+    ELSE
+        RAISE NOTICE '✗ Nível Prata já existia';
+    END IF;
+
+    INSERT INTO nivel_fidelidade (nome, pontos_minimos, desconto_percentual)
+    SELECT 'Ouro', 3000, 10.00
+    WHERE NOT EXISTS (SELECT 1 FROM nivel_fidelidade WHERE nome = 'Ouro');
+
+    IF FOUND THEN
+        RAISE NOTICE '✓ Nível Ouro inserido (3.000 pontos, 10%% desconto)';
+    ELSE
+        RAISE NOTICE '✗ Nível Ouro já existia';
+    END IF;
+
+    RAISE NOTICE '==========================================';
+END $$;
+
+-- =====================================================
+-- 2. INSERIR PONTUAÇÃO DOS MOTORISTAS (CORRIGIDO)
+-- =====================================================
+
+DO $$
+DECLARE
+    motorista_cursor CURSOR FOR
+        SELECT id, nome FROM motorista WHERE status = 'ativo' OR status = 'Ativo';
+    m_id INTEGER;
+    m_nome TEXT;
+    nivel_id INTEGER;
+    pontos_calculados INTEGER;
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'INSERINDO PONTUAÇÃO DOS MOTORISTAS...';
+    RAISE NOTICE '==========================================';
+
+    OPEN motorista_cursor;
+    LOOP
+        FETCH motorista_cursor INTO m_id, m_nome;
+        EXIT WHEN NOT FOUND;
+
+        -- Usando alias "a" para a tabela aluguel e comparando com a variável m_id
+        SELECT COALESCE(SUM(a.valor_total)::INTEGER, 0) INTO pontos_calculados
+        FROM aluguel a
+        WHERE a.motorista_id = m_id AND a.status IN ('concluido', 'Concluido');
+
+        -- Define nível com base nos pontos acumulados
+        SELECT id INTO nivel_id
+        FROM nivel_fidelidade
+        WHERE pontos_minimos <= pontos_calculados
+        ORDER BY pontos_minimos DESC
+        LIMIT 1;
+
+        IF nivel_id IS NULL THEN
+            SELECT id INTO nivel_id FROM nivel_fidelidade WHERE nome = 'Bronze';
+        END IF;
+
+        -- Insere ou atualiza a pontuação
+        INSERT INTO pontuacao_motorista (motorista_id, saldo_pontos, nivel_id, ultima_atualizacao)
+        VALUES (m_id, pontos_calculados, nivel_id, CURRENT_TIMESTAMP)
+        ON CONFLICT (motorista_id) DO UPDATE
+        SET saldo_pontos = EXCLUDED.saldo_pontos,
+            nivel_id = EXCLUDED.nivel_id,
+            ultima_atualizacao = EXCLUDED.ultima_atualizacao;
+
+        RAISE NOTICE '  Motorista % (ID: %) - Pontos: % - Nível: %',
+            m_nome, m_id, pontos_calculados,
+            (SELECT nome FROM nivel_fidelidade WHERE id = nivel_id);
+    END LOOP;
+    CLOSE motorista_cursor;
+
+    RAISE NOTICE '==========================================';
+END $$;
+
+-- =====================================================
+-- 3. INSERIR INSIGHTS DE IA PARA MANUTENÇÃO
+-- =====================================================
+
+DO $$
+DECLARE
+    veiculo_cursor CURSOR FOR
+        SELECT v.id, v.modelo, v.placa, v.quilometragem,
+               EXTRACT(YEAR FROM v.criado_em) AS ano_frota,
+               COALESCE(MAX(m.data_inicio), '2000-01-01') AS ultima_manutencao
+        FROM veiculo v
+        LEFT JOIN manutencao m ON v.id = m.veiculo_id
+        GROUP BY v.id;
+    veiculo_record RECORD;
+    alerta TEXT;
+    prob NUMERIC(5,2);
+    previsao DATE;
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'INSERINDO INSIGHTS DE IA...';
+    RAISE NOTICE '==========================================';
+
+    FOR veiculo_record IN veiculo_cursor LOOP
+        alerta := NULL;
+        prob := NULL;
+        previsao := NULL;
+
+        -- Regra 1: Quilometragem alta (acima de 50.000 km)
+        IF veiculo_record.quilometragem > 50000 THEN
+            alerta := format('Veículo com alta quilometragem (%,.0f km). Risco de falhas mecânicas aumentado.', veiculo_record.quilometragem);
+            prob := 0.70;
+            previsao := CURRENT_DATE + INTERVAL '60 days';
+        END IF;
+
+        -- Regra 2: Sem manutenção há mais de 1 ano
+        IF veiculo_record.ultima_manutencao < (CURRENT_DATE - INTERVAL '365 days') THEN
+            alerta := COALESCE(alerta || ' ', '') || 'Última manutenção há mais de 1 ano. Revisão obrigatória.';
+            prob := COALESCE(prob, 0.50);
+            previsao := COALESCE(previsao, CURRENT_DATE + INTERVAL '30 days');
+        END IF;
+
+        -- Regra 3: Veículos antigos (ano < 2015)
+        IF (SELECT ano FROM veiculo WHERE id = veiculo_record.id) < 2015 THEN
+            alerta := COALESCE(alerta || ' ', '') || 'Veículo com mais de 10 anos de uso. Atenção a sistemas críticos.';
+            prob := COALESCE(prob, 0.60);
+            previsao := COALESCE(previsao, CURRENT_DATE + INTERVAL '45 days');
+        END IF;
+
+        -- Se não houver nenhum alerta, insere um padrão de "manutenção preventiva"
+        IF alerta IS NULL THEN
+            alerta := 'Manutenção preventiva recomendada com base na quilometragem atual.';
+            prob := 0.30;
+            previsao := CURRENT_DATE + INTERVAL '90 days';
+        END IF;
+
+        -- Insere o insight
+        INSERT INTO insight_ia_manutencao (veiculo_id, mensagem_alerta, probabilidade_falha, data_previsao)
+        SELECT veiculo_record.id, alerta, prob, previsao
+        WHERE NOT EXISTS (
+            SELECT 1 FROM insight_ia_manutencao
+            WHERE veiculo_id = veiculo_record.id
+              AND mensagem_alerta = alerta
+        );
+
+        RAISE NOTICE '  % (%) - Alerta: % | Prob: % | Previsão: %',
+            veiculo_record.modelo, veiculo_record.placa,
+            left(alerta, 50) || '...', prob, previsao;
+    END LOOP;
+
+    RAISE NOTICE '==========================================';
+END $$;
+
+-- =====================================================
+-- RESUMO FINAL DOS DADOS DE INOVAÇÃO
+-- =====================================================
+
+DO $$
+DECLARE
+    niveis INTEGER;
+    pontuados INTEGER;
+    insights INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO niveis FROM nivel_fidelidade;
+    SELECT COUNT(*) INTO pontuados FROM pontuacao_motorista;
+    SELECT COUNT(*) INTO insights FROM insight_ia_manutencao;
+
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'RESUMO FINAL - DADOS DE INOVAÇÃO';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Níveis de fidelidade: %', niveis;
+    RAISE NOTICE 'Motoristas pontuados: %', pontuados;
+    RAISE NOTICE 'Insights de IA gerados: %', insights;
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Processo de inserção de dados de inovação concluído.';
+END $$;

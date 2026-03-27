@@ -1,0 +1,95 @@
+-- ==========================================================
+-- FASE 1: ESTRUTURA BASE (TABELAS AUXILIARES E PESSOAS)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS categoria_veiculo (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao TEXT
+);
+
+CREATE TABLE IF NOT EXISTS status_veiculo (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS motorista (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    data_nascimento DATE NOT NULL CHECK (data_nascimento < CURRENT_DATE),
+    cnh VARCHAR(20) UNIQUE NOT NULL,
+    validade_cnh DATE NOT NULL CHECK (validade_cnh > CURRENT_DATE),
+    telefone VARCHAR(20),
+    email VARCHAR(150) UNIQUE,
+    status VARCHAR(50) DEFAULT 'Ativo',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS atendente (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    senha TEXT NOT NULL,
+    nivel_acesso VARCHAR(50) NOT NULL CHECK (nivel_acesso IN ('ADMIN', 'FUNCIONARIO'))
+);
+
+-- ==========================================================
+-- FASE 1: VEÍCULOS E OPERAÇÕES
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS veiculo (
+    id SERIAL PRIMARY KEY,
+    modelo VARCHAR(100) NOT NULL,
+    placa VARCHAR(10) UNIQUE NOT NULL,
+    ano INT NOT NULL CHECK (ano >= 2000),
+    categoria_id INT NOT NULL REFERENCES categoria_veiculo(id),
+    status_id INT NOT NULL REFERENCES status_veiculo(id),
+    valor_diaria DECIMAL(10,2) NOT NULL CHECK (valor_diaria > 0),
+    quilometragem INT DEFAULT 0,
+    FOREIGN KEY (categoria_id) REFERENCES categoria_veiculo(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS aluguel (
+    id SERIAL PRIMARY KEY,
+    motorista_id INT NOT NULL REFERENCES motorista(id),
+    veiculo_id INT NOT NULL REFERENCES veiculo(id),
+    atendente_id INT NOT NULL REFERENCES atendente(id),
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL CHECK (data_fim >= data_inicio),
+    valor_total DECIMAL(10,2) NOT NULL CHECK (valor_total > 0),
+    status VARCHAR(50) DEFAULT 'Pendente'
+);
+
+-- ==========================================================
+-- FASE 2: INOVAÇÃO (GAMIFICAÇÃO - EcoDrive)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS nivel_fidelidade (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL, -- Ex: Bronze, Prata, Ouro
+    pontos_minimos INT NOT NULL,
+    desconto_percentual DECIMAL(5,2) DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS pontuacao_motorista (
+    id SERIAL PRIMARY KEY,
+    motorista_id INT UNIQUE NOT NULL REFERENCES motorista(id) ON DELETE CASCADE,
+    saldo_pontos INT DEFAULT 0 CHECK (saldo_pontos >= 0),
+    nivel_id INT REFERENCES nivel_fidelidade(id),
+    ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================================
+-- FASE 2: INOVAÇÃO (INTELIGÊNCIA DE DADOS - IA Preditiva)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS insight_ia_manutencao (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INT NOT NULL REFERENCES veiculo(id) ON DELETE CASCADE,
+    mensagem_alerta TEXT NOT NULL, -- A frase que aparece no v0
+    probabilidade_falha DECIMAL(5,2),
+    data_previsao DATE,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
