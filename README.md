@@ -6,8 +6,7 @@
 Sistema de gerenciamento para locadora de veículos, permitindo o controle completo de motoristas, veículos, aluguéis, manutenções e multas.
 
 ### Objetivo Geral
-Desenvolver um banco de dados relacional para gerenciar as operações de uma locadora de veículos, incluindo cadastro de motoristas, controle de frota, registro de aluguéis, manutenções e multas, garantindo a integridade e consistência dos dados.
-
+Desenvolver um banco de dados relacional robusto, com regras de integridade e funcionalidades inovadoras (gamificação e manutenção preditiva), para otimizar a gestão operacional da locadora.
 ### Público-Alvo
 - Administradores de locadoras de veículos
 - Atendentes e operadores do sistema
@@ -15,6 +14,99 @@ Desenvolver um banco de dados relacional para gerenciar as operações de uma lo
 - Clientes que alugam veículos
 
 ---
+
+## 🏗️ Fase 1 – Estrutura Base do Banco de Dados
+
+### 1.1 Tabelas Fundamentais
+
+- MOTORISTA: Armazena dados pessoais e da CNH dos condutores autorizados.
+- CLIENTES: Pessoa física ou jurídica que contrata o aluguel.
+- ATENDENTE: Funcionários da locadora que registram os aluguéis.
+- CATEGORIA_VEICULO: Classificação dos veículos (Econômico, SUV, Luxo, etc.).
+- STATUS_VEICULO: Situação atual do veículo (Disponível, Alugado, Em manutenção).
+- VEICULO: Frota de veículos, com modelo, placa, valor diária e quilometragem.
+- ALUGUEL: Registro de cada locação, vinculando motorista, veículo, atendente e cliente.
+- MANUTENCAO: Histórico de serviços realizados nos veículos.
+- MULTA: Infrações associadas a um aluguel específico.
+
+
+## 🚀 Fase 2 – Inovação e Prototipação
+Nesta fase, foram incorporadas funcionalidades inovadoras para aumentar o engajamento dos usuários e otimizar a gestão da frota, utilizando gamificação e inteligência de dados.
+
+### 2.1 Gamificação – Programa EcoDrive
+- O objetivo é incentivar bons motoristas, recompensando-os com pontos e descontos progressivos. As novas tabelas implementadas são:
+
+- NIVEL_FIDELIDADE
+Define os níveis de fidelidade (Bronze, Prata, Ouro), com pontos mínimos e desconto percentual.
+
+- PONTUACAO_MOTORISTA
+Mantém o saldo de pontos de cada motorista, o nível atual e a data da última atualização.
+
+### Funcionamento:
+- A cada aluguel concluído, o motorista acumula pontos equivalentes ao valor total do aluguel (R$ 1,00 = 1 ponto). O sistema automaticamente recalcula o nível de fidelidade com base nos pontos acumulados.
+
+- Dados inseridos (exemplo):
+
+### Nível	Pontos Mínimos	Desconto
+Bronze	0	0%
+Prata	1.000	5%
+Ouro	3.000	10%
+### Motoristas pontuados após execução do script:
+
+### Motorista	Pontos	Nível
+Carlos Silva	0	Bronze
+Ana Oliveira	900	Bronze
+- Os demais motoristas inativos não foram considerados, conforme regra de negócio.
+
+## 2.2 Inteligência de Dados – Manutenção Preditiva
+### Utilizando regras simples baseadas em quilometragem, tempo sem manutenção e idade do veículo, o sistema gera insights automatizados para alertar sobre riscos de falhas.
+
+### INSIGHT_IA_MANUTENCAO
+-Armazena alertas gerados, probabilidade estimada de falha e data prevista para ocorrência.
+
+### Regras implementadas:
+- Quilometragem > 50.000 km → alerta com probabilidade de falha 70% e previsão em 60 dias.
+- Última manutenção há mais de 1 ano → alerta com 50% de probabilidade e previsão em 30 dias.
+- Veículos com mais de 10 anos de uso → alerta com 60% de probabilidade e previsão em 45 dias.
+
+### Resultado da execução:
+- Para os 8 veículos cadastrados, foram gerados insights indicando que a última manutenção ocorreu há mais de 1 ano (ou não há registro), com probabilidade de falha de 50% e data prevista para 30 dias após a execução.
+
+## 2.3 Protótipo de Interface
+- Foram desenvolvidas telas HTML básicas para demonstrar a interação do usuário com as funcionalidades inovadoras:
+- Tela de Login – Autenticação de atendentes e administradores.
+- Tela Principal (Dashboard) – Resumo de aluguéis ativos, pontuação do motorista, níveis de fidelidade e alertas de IA.
+- Tela de Gamificação – Visualização do saldo de pontos, progresso para próximo nível e conquistas.
+- Tela de Manutenção Preditiva – Exibição dos alertas gerados para a frota.
+- Os protótipos estão disponíveis na pasta /prototipo do repositório.
+
+## ✅ Resultados da Implementação
+### A execução completa dos scripts resultou em:
+- 8 veículos cadastrados, distribuídos nas categorias Econômico, Intermediário, SUV, Luxo e Pickup.
+- 3 níveis de fidelidade ativos.
+- 2 motoristas pontuados (Carlos Silva e Ana Oliveira).
+- 8 insights de IA gerados (um para cada veículo), todos com alerta de revisão obrigatória.
+- Aluguéis de exemplo com status concluído e pendente, gerando base para pontuação.
+- Manutenções registradas para alguns veículos, servindo como referência para as regras preditivas.\
+
+## 🚀 Benefícios do Modelo
+
+* ✔️ **Integridade garantida:** Constraints `CHECK` e `FOREIGN KEY` impedem dados inválidos (ex.: CNH vencida, valor de aluguel negativo, duplicidade de CPF/placa).
+* ✔️ **Proteção contra exclusões indevidas:** `ON DELETE RESTRICT` bloqueia remoção de registros com dependências ativas.
+* ✔️ **Consistência transacional:** Uso de chaves estrangeiras mantém a coerência entre aluguéis, veículos, motoristas e multas.
+* ✔️ **Automação de regras de negócio:** Pontuação automática no programa EcoDrive e geração de insights de manutenção preditiva.
+* ✔️ **Pronto para produção:** Estrutura normalizada, scripts versionados e protótipo de interface funcional.
+
+---
+## 🏆 Diferencial
+
+Este projeto se destaca por:
+
+* **Constraints avançadas** – Validações de domínio (níveis de acesso, datas futuras, valores positivos) diretamente no banco.
+* **Gamificação (EcoDrive)** – Sistema de pontuação e níveis de fidelidade (Bronze, Prata, Ouro) que incentiva bons motoristas com descontos progressivos.
+* **Inteligência de dados** – Alertas preditivos de manutenção baseados em quilometragem, tempo sem revisão e idade do veículo.
+* **Integridade referencial completa** – Relacionamentos bem definidos que evitam inconsistências operacionais.
+* **Interface profissional** – Protótipos HTML que demonstram a experiência do usuário com dashboards personalizados e telas de gestão.
 
 ## 📊 Modelo de Dados Relacional
 
@@ -124,180 +216,6 @@ erDiagram
     STATUS_VEICULO ||--o{ VEICULO : define
 
 ```
-
-## 🔒 Regras de Integridade e Estrutura do Banco
-
-O banco de dados foi projetado com foco em **integridade, consistência e boas práticas**, utilizando constraints avançadas do PostgreSQL.
-
----
-
-### 🧠 Regras Aplicadas
-
-* 🔑 **Primary Key (PK):** Identificador único em todas as tabelas
-* 🔗 **Foreign Key (FK):** Garantia de relacionamento válido entre tabelas
-* ⚠️ **NOT NULL:** Campos obrigatórios
-* 🔁 **UNIQUE:** Evita duplicidade (CPF, email, placa, chassi)
-* ✅ **CHECK:** Validação de regras de negócio
-* ⚙️ **DEFAULT:** Valores automáticos
-* 🔄 **ON DELETE CASCADE / RESTRICT:** Controle de exclusão
-
----
-
-## 🧱 Script SQL Completo
-
-```sql
--- =========================
--- TABELAS AUXILIARES
--- =========================
-
-CREATE TABLE IF NOT EXISTS categoria_veiculo (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL UNIQUE,
-    descricao TEXT
-);
-
-CREATE TABLE IF NOT EXISTS status_veiculo (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL UNIQUE
-);
-
--- =========================
--- PESSOAS
--- =========================
-
-CREATE TABLE IF NOT EXISTS motorista (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    data_nascimento DATE NOT NULL CHECK (data_nascimento < CURRENT_DATE),
-    cnh VARCHAR(20) UNIQUE NOT NULL,
-    validade_cnh DATE NOT NULL CHECK (validade_cnh > CURRENT_DATE),
-    telefone VARCHAR(20),
-    email VARCHAR(150) UNIQUE,
-    endereco TEXT,
-    status VARCHAR(50) DEFAULT 'Ativo',
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS cliente (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    email VARCHAR(150) UNIQUE,
-    telefone VARCHAR(20)
-);
-
-CREATE TABLE IF NOT EXISTS atendente (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    senha TEXT NOT NULL,
-    nivel_acesso VARCHAR(50) NOT NULL CHECK (nivel_acesso IN ('ADMIN', 'FUNCIONARIO'))
-);
-
--- =========================
--- VEICULO
--- =========================
-
-CREATE TABLE IF NOT EXISTS veiculo (
-    id SERIAL PRIMARY KEY,
-    modelo VARCHAR(100) NOT NULL,
-    placa VARCHAR(10) UNIQUE NOT NULL,
-    ano INT NOT NULL CHECK (ano >= 2000),
-    chassi VARCHAR(50) UNIQUE NOT NULL,
-    cor VARCHAR(50),
-    categoria_id INT NOT NULL,
-    status_id INT NOT NULL,
-    valor_diaria DECIMAL(10,2) NOT NULL CHECK (valor_diaria > 0),
-    quilometragem INT DEFAULT 0 CHECK (quilometragem >= 0),
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (categoria_id)
-        REFERENCES categoria_veiculo(id)
-        ON DELETE RESTRICT,
-
-    FOREIGN KEY (status_id)
-        REFERENCES status_veiculo(id)
-        ON DELETE RESTRICT
-);
-
--- =========================
--- ALUGUEL
--- =========================
-
-CREATE TABLE IF NOT EXISTS aluguel (
-    id SERIAL PRIMARY KEY,
-    motorista_id INT NOT NULL,
-    veiculo_id INT NOT NULL,
-    atendente_id INT NOT NULL,
-    cliente_id INT NOT NULL,
-    data_inicio DATE NOT NULL,
-    data_fim DATE NOT NULL,
-    data_pagamento DATE,
-    forma_pagamento VARCHAR(50),
-    valor_total DECIMAL(10,2) NOT NULL CHECK (valor_total > 0),
-    status VARCHAR(50) DEFAULT 'Pendente',
-    comprovante_url TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CHECK (data_fim >= data_inicio),
-
-    FOREIGN KEY (motorista_id)
-        REFERENCES motorista(id)
-        ON DELETE RESTRICT,
-
-    FOREIGN KEY (veiculo_id)
-        REFERENCES veiculo(id)
-        ON DELETE RESTRICT,
-
-    FOREIGN KEY (atendente_id)
-        REFERENCES atendente(id)
-        ON DELETE RESTRICT,
-
-    FOREIGN KEY (cliente_id)
-        REFERENCES cliente(id)
-        ON DELETE RESTRICT
-);
-
--- =========================
--- MANUTENCAO
--- =========================
-
-CREATE TABLE IF NOT EXISTS manutencao (
-    id SERIAL PRIMARY KEY,
-    veiculo_id INT NOT NULL,
-    descricao TEXT NOT NULL,
-    data_inicio DATE NOT NULL,
-    data_fim DATE,
-    custo DECIMAL(10,2) CHECK (custo >= 0),
-    tipo VARCHAR(50),
-
-    CHECK (data_fim IS NULL OR data_fim >= data_inicio),
-
-    FOREIGN KEY (veiculo_id)
-        REFERENCES veiculo(id)
-        ON DELETE CASCADE
-);
-
--- =========================
--- MULTA
--- =========================
-
-CREATE TABLE IF NOT EXISTS multa (
-    id SERIAL PRIMARY KEY,
-    aluguel_id INT NOT NULL,
-    descricao TEXT,
-    valor DECIMAL(10,2) NOT NULL CHECK (valor > 0),
-    data_multa DATE NOT NULL,
-    status VARCHAR(50) DEFAULT 'Pendente',
-
-    FOREIGN KEY (aluguel_id)
-        REFERENCES aluguel(id)
-        ON DELETE CASCADE
-);
-```
-
 ---
 
 ## 🚀 Benefícios do Modelo
@@ -309,7 +227,6 @@ CREATE TABLE IF NOT EXISTS multa (
 * ✔️ Pronto para uso em produção
 
 ---
-
 ## 🏆 Diferencial
 
 Este projeto utiliza:
@@ -317,3 +234,5 @@ Este projeto utiliza:
 * Constraints avançadas
 * Validações de negócio no banco
 * Integridade referencial completa
+* Interface Profissional
+* 
